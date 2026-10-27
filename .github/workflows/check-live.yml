@@ -1,0 +1,33 @@
+name: check-live
+
+# Checks that https://selotape.dev/resume serves this repo's page, a few
+# minutes after each push to main (Cloudflare Workers Builds deploys it).
+# Lets an agent confirm a deploy without reaching the site itself.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Wait for the page and the PDF
+        run: |
+          for i in $(seq 1 20); do
+            page=$(curl -sS -L --max-time 15 https://selotape.dev/resume || true)
+            pdf=$(curl -sS -o /dev/null -w '%{http_code} %{content_type}' --max-time 15 https://selotape.dev/resume.pdf || true)
+            if grep -q 'class="dl"' <<<"$page" && [[ $pdf == "200 application/pdf"* ]]; then
+              echo "Live: page and PDF OK"; exit 0
+            fi
+            echo "Not yet (pdf: $pdf); retrying in 20s"
+            sleep 20
+          done
+          echo "::error::selotape.dev/resume is not serving the resume page"
+          echo "$page" | head -c 2000
+          curl -sSI --max-time 15 https://selotape.dev/resume || true
+          exit 1
