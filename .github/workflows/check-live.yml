@@ -28,13 +28,14 @@ jobs:
           for i in $(seq 1 20); do
             page=$(curl -sS -L --max-time 15 https://selotape.dev/resume || true)
             pdf=$(curl -sS -o /dev/null -w '%{http_code} %{content_type}' --max-time 15 https://selotape.dev/resume.pdf || true)
-            if grep -q 'class="dl"' <<<"$page" && [[ $pdf == "200 application/pdf"* ]]; then
+            # Same bytes as this commit's page, so it also waits for the deploy.
+            if [[ $page == "$(cat public/resume.html)" && $pdf == "200 application/pdf"* ]]; then
               echo "Live: page and PDF OK"; exit 0
             fi
             echo "Not yet (pdf: $pdf); retrying in 20s"
             sleep 20
           done
-          echo "::error::selotape.dev/resume is not serving the resume page"
+          echo "::error::selotape.dev/resume is not serving this commit's resume page"
           echo "$page" | head -c 2000
           curl -sSI --max-time 15 https://selotape.dev/resume || true
           exit 1
