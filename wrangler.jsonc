@@ -8,6 +8,6 @@
 	"routes": [{ "pattern": "selotape.dev/resume*", "zone_name": "selotape.dev" }],
 	// The PDF stays at the repo root (old links point at its GitHub raw URL),
 	// so the deploy copies it in rather than keeping a second copy in git.
-	"build": { "command": "cp 'Ron Visbord - CV.pdf' public/resume.pdf" },
+	"build": { "command": "cp 'Ron Visbord - Resume.pdf' public/resume.pdf" },
 	"assets": { "directory": "./public" }
 }

@@ -1,0 +1,36 @@
+name: pdf
+
+# Rebuilds "Ron Visbord - Resume.pdf" from public/resume.html after each change and
+# commits it. That push redeploys the site with the new PDF.
+
+on:
+  push:
+    branches: [main]
+    paths: ['public/resume.html', 'public/resume-assets/**', 'scripts/pdf.mjs']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: pdf
+
+jobs:
+  pdf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Emoji font
+        run: sudo apt-get install -y --no-install-recommends fonts-noto-color-emoji
+      - run: npm install --no-save playwright-core
+      - run: node scripts/pdf.mjs
+      - name: Commit the PDF if it changed
+        run: |
+          git add "Ron Visbord - Resume.pdf"
+          git diff --cached --quiet && exit 0
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "Rebuild the PDF from resume.html"
+          git push
